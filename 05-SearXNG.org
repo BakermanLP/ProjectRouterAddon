@@ -1,0 +1,68 @@
+#+title: Project Router Addon - Part 2 - Zusammenspiel Pi-Hole und Nginx Proxy Manager
+#+author: Michael Bäcker
+#+date: 2025-05-16
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Links aus dem Video
++ https://github.com/pi-hole/docker-pi-hole/
++ https://www.raspberrypi.com/software/
++ https://searxng.org/
+
+http://www.youtube.com/watch?v=DBCLYuQs7E
+
+** SearXNG Container einbinden als zweiten "virtuellen Host"
+Erst mal schnell das docker-compose.yaml File anlegen in einem eigenen Ordner:
+
+#+begin_src yaml
+services:
+    searxng:
+        image: searxng/searxng
+        environment:
+            - INSTANCE_NAME=searxng
+            - 'BASE_URL=http://search.home.baecker.com/'
+            - PUID=1000
+            - PGID=1000
+        volumes:
+            - ./data:/etc/searxng
+        ports:
+            - '8999:8080'
+        cap_add:
+            - CHOWN
+            - SETGID
+            - SETUID
+        user: 1000:1000
+#+end_src
+
+#+begin_src bash
+  mkdir data
+
+  docker compose up -d
+  # oder
+  docker-compose up -d
+
+  # Kontrolle ob er richtig läuft
+  docker compose logs -f
+  # oder
+  docker-compose logs -f
+  # Mit STRG+c die Ausgabe beenden
+#+end_src
+
+Im NGinx Proxy Manager richten wir den Proxy Host ein:
++ Hosts
+  + Proxy Hosts
+    + Add Proxy Host
+
+       - Domain Names: search.home.baecker.com
+       - Scheme: http
+       - Forward Hostname / IP: 192.168.1.51
+       - Forward Port: 8999
+
+In Pihole richten wir einen DNS Namen oder einen CName ein:
++ Settings
+  + Local DNS Records
+
+    - Einen local CNAME Record für euren virtuellen Host
+    - Domain: search.home.baecker.com
+    - Target: routeraddon.home.baecker.com
+
+Und jetzt solltet ihr mittels http://search.home.baecker.com/ auf die Startseite von SearXNG kommen

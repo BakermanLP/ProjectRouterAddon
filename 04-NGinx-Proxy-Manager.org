@@ -1,0 +1,87 @@
+#+title: Project Router Addon - Part 2 - Zusammenspiel Pi-Hole und Nginx Proxy Manager
+#+author: Michael Bäcker
+#+date: 2025-05-16
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Links aus dem Video
++ https://github.com/pi-hole/docker-pi-hole/
++ https://www.raspberrypi.com/software/
++ https://searxng.org/
+
+http://www.youtube.com/watch?v=DBCLYuQs7E
+
+* Installation NGinx Proxy Manager
+** Docker Container einrichten
+Wie üblich richten wir einen Docker Container ein mittels einer docker-compose.yaml Datei in einem eigenen Ordner.
+
+#+begin_src yaml
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+      # Add any other Stream port you want to expose
+      # - '21:21' # FTP
+
+    # Uncomment the next line if you uncomment anything in the section
+    environment:
+      # Uncomment this if you want to change the location of
+      # the SQLite DB file within the container
+      DB_SQLITE_FILE: "/data/database.sqlite"
+
+      # Uncomment this if IPv6 is not enabled on your host
+      DISABLE_IPV6: 'true'
+
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+#+end_src
+
+Dann legen wir noch auf die Schnelle die notwendigen Ordner an:
+#+begin_src bash
+mkdir data letsencrypt
+#+end_src
+
+... und starten den Container.
+#+begin_src bash
+  docker compose up
+  # bzw.
+  docker-compose up
+#+end_src
+
+Aufruf über die IP-Adresse und den Port 81.
+http://192.168.1.51:81/
+
+Anmelden über:
+- Email Address: admin@example.com
+- Password: changeme
+
+Quelle: https://nginxproxymanager.com/setup/#default-administrator-user
+
+** Einrichtung des ersten "virtuellen Hosts"
+Im NGinx Proxy Manager richten wir den Proxy Host ein:
++ Hosts
+  + Proxy Hosts
+    + Add Proxy Host
+       - Domain Names: pihole.home.baecker.com
+       - Scheme: http
+       - Forward Hostname / IP: 192.168.1.51
+       - Forward Port: 7777
+
+In Pihole richten wir einen DNS Namen oder einen CName ein:
++ Settings
+  + Local DNS Records
+    - Einen local DNS Record für eure Maschine
+    - Domain: routeraddon.home.baecker.com
+    - IP: 192.168.1.51
+
+    - Einen local CNAME Record für euren virtuellen Host
+    - Domain: pihole.home.baecker.com
+    - Target: routeraddon.home.baecker.com
+
+Und jetzt solltet ihr mittels http://pihole.home.baecker.com/admin/ auf euer Pi-Hole Webinterface zugreifen können.
+
