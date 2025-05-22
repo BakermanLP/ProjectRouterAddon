@@ -1,0 +1,115 @@
+#+title: Project Router Addon
+#+author: Michael Bäcker
+#+date: 2025-05-07
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Links aus dem Video
++ https://www.raspberrypi.com/software/
++ https://quad9.net/de/
++ https://github.com/pi-hole/docker-pi-hole/
+
+https://www.youtube.com/watch?v=_DBCLYuQs7E
+
+* Raspberry Pi Installation
+
+Mit dem Tool Raspberry Pi Imager erzeugt ihr euch einen USB Stick oder eine Memory Card für den Raspberry Pi.
+Bei der OS Auswahl empfehle ich im Moment (Mai 2025) Ubuntu Server 24.04 LTS 64 Bit
+
+Das Bootet ihr dann und könnt euch danach mit dem Benutzernamen ubuntu und dem Passwort ubuntu per SSH auf der Maschine anmelden
+
+* Konfigurationen
+** Hostnamen setzen
+#+begin_src bash
+sudo vi /etc/hostname
+#+end_src
+
+Nun folgende Tastenkombinationen
+#+begin_src vim
+D (Zum löschen des Inhalts der Zeile
+i (Zum aktivieren des Insert Modus)
+pi-one (Euer Hostnamen)
+ESC (zum beenden des Insert Modus)
+:wq
+#+end_src
+
+Damit ist der Hostnane gesetzt
+
+** System aktualisieren
+
+#+begin_src bash
+sudo apt update
+sudo apt upgrade
+#+end_src
+
+** Snap entfernen
+#+begin_src bash
+  sudo -i
+  apt remove snapd
+  rm -r /snap /var/snap /var/lib/snapd
+  # Eventuell nach einem Reboot nochmal ausführen
+#+end_src
+
+** Docker installieren
+
+#+begin_src bash
+  apt install docker.io docker-compose-v2
+  usermod -a -G docker ubuntu
+  exit
+#+end_src
+
+** Netzwerkkonfiguration
+
+Bitte an der folgenden Datei noch eventuell notwendige Änderungen vornehmen.
+
+#+begin_src bash
+sudo vi /etc/netplan/50-cloud-init.yaml
+#+end_src
+
+/etc/netplan/50-cloud-init.yaml
+#+begin_src yaml 
+network:
+    ethernets:
+        eth0:
+            addresses:
+            - 192.168.1.51/24
+            dhcp4: false
+            gateway4: 192.168.1.1
+            nameservers:
+                addresses:
+                - 9.9.9.9
+                - 1.1.1.1
+            optional: true
+    version: 2
+#+end_src
+
+** Netzwerk Konfiguration kontrollieren
+
+#+begin_src bash
+  ip addr ls dev eth0
+
+  networkctl status eth0
+#+end_src
+
+** Lokalen Resolver deaktivieren  
+
+#+begin_src bash
+sudo vi /etc/systemd/resolved.conf
+#+end_src
+#+begin_src ini 
+[Resolve]
+DNSStubListener=no
+#+end_src
+#+begin_src bash
+sudo systemctl restart systemd-resolved.service
+#+end_src
+
+** Testen des Benutzers
+#+begin_src bash
+id
+#+end_src
+Hier müsste in der Auflistung der Gruppen auch die Gruppe docker auftauchen. Wenn ja, dann sollte auch der nächste Befehl funktionieren
+
+#+begin_src bash
+docker ps
+#+end_src
+
