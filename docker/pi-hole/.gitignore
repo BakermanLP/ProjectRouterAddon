@@ -1,0 +1,5 @@
+etc-dnsmasq.d/*
+etc-pihole/*
+!etc-pihole/pihole.toml
+var-log-pihole/*
+

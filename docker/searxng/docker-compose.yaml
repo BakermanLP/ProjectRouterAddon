@@ -1,0 +1,17 @@
+services:
+    searxng:
+        image: searxng/searxng
+        environment:
+            - INSTANCE_NAME=searxng
+            - 'BASE_URL=http://search.home.baecker.com/'
+            - PUID=1000
+            - PGID=1000
+        volumes:
+            - ./data:/etc/searxng
+        ports:
+            - '8999:8080'
+        cap_add:
+            - CHOWN
+            - SETGID
+            - SETUID
+        user: 1000:1000
