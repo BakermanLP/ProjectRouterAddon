@@ -1,4 +1,4 @@
-#+title: Project Router Addon
+#+title: Project Router Addon - Installation Raspberry PI
 #+author: Michael Bäcker
 #+date: 2025-05-07
 #+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk

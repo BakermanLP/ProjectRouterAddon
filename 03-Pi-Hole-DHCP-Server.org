@@ -1,4 +1,4 @@
-#+title: Project Router Addon - Part 2 - Zusammenspiel Pi-Hole und Nginx Proxy Manager
+#+title: Project Router Addon - Pi-Hole als DHCP Server
 #+author: Michael Bäcker
 #+date: 2025-05-16
 #+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
