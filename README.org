@@ -3,6 +3,8 @@
 #+date: 2025-05-07
 #+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
 
+In diesem Projekt möchte ich euch zeigen, wie man sein Heimnetzwerk besser machen kann mit einem Mini Server. Ich verwende hier einen Raspberry Pi, es geht aber mit vielen anderen Maschinen, jedoch ist der Raspberry Pi die Methode mit dem geringsten Strombedarf bisher. Und bitte dabei auch bedenken, dass die Maschine 24/7/365 läuft. Da kommt es eigentlich auf jedes Watt an, dass wir uns sparen können.
+
 * Inhalt :toc:
 - [[#links-aus-dem-video][Links aus dem Video]]
 - [[#video][Video]]
