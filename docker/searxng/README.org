@@ -8,6 +8,7 @@
 + https://www.raspberrypi.com/software/
 + https://searxng.org/
 
+* Video
 http://www.youtube.com/watch?v=DBCLYuQs7E
 
 ** SearXNG Container einbinden als zweiten "virtuellen Host"
