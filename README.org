@@ -3,11 +3,27 @@
 #+date: 2025-05-07
 #+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
 
+* Inhalt :toc:
+- [[#links-aus-dem-video][Links aus dem Video]]
+- [[#video][Video]]
+- [[#raspberry-pi-installation][Raspberry Pi Installation]]
+- [[#konfigurationen][Konfigurationen]]
+  - [[#hostnamen-setzen][Hostnamen setzen]]
+  - [[#system-aktualisieren][System aktualisieren]]
+  - [[#snap-entfernen][Snap entfernen]]
+  - [[#docker-installieren][Docker installieren]]
+  - [[#netzwerkkonfiguration][Netzwerkkonfiguration]]
+  - [[#netzwerk-konfiguration-kontrollieren][Netzwerk Konfiguration kontrollieren]]
+  - [[#lokalen-resolver-deaktivieren][Lokalen Resolver deaktivieren]]
+  - [[#testen-des-benutzers][Testen des Benutzers]]
+- [[#nächsten-schritte][Nächsten Schritte]]
+
 * Links aus dem Video
 + https://www.raspberrypi.com/software/
 + https://quad9.net/de/
 + https://github.com/pi-hole/docker-pi-hole/
 
+* Video
 https://www.youtube.com/watch?v=_DBCLYuQs7E
 
 * Raspberry Pi Installation
@@ -114,4 +130,6 @@ docker ps
 #+end_src
 
 * Nächsten Schritte
-+ Installation Pi-Hole [[docker/pi-hole/README.org][Installation]]
++ Installation Pi-Hole [[docker/pi-hole/README.org][Anleitung]]
++ Installation NGinx Proxy Manager [[docker/nginx-proxy-manager/README.org][Anleitung]]
++ Installation SearXNG [[docker/searxng/README.org][Anleitung]]
