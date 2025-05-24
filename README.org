@@ -113,3 +113,5 @@ Hier müsste in der Auflistung der Gruppen auch die Gruppe docker auftauchen. We
 docker ps
 #+end_src
 
+* Nächsten Schritte
++ Installation Pi-Hole [[docker/pi-hole/README.org][Installation]]

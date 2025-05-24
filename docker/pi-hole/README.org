@@ -1,0 +1,261 @@
+#+title: Project Router Addon - Installation Pi-Hole
+#+author: Michael Bäcker
+#+date: 2025-05-07
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Inhalt :toc:
+- [[#links-aus-dem-video][Links aus dem Video]]
+- [[#videos][Videos]]
+- [[#installation-pi-hole-als-docker-container][Installation Pi-Hole als Docker Container]]
+  - [[#pi-hole][Pi-Hole]]
+  - [[#fritzbox-dns-ändern][Fritzbox DNS ändern]]
+- [[#links-aus-dem-video-1][Links aus dem Video]]
+- [[#umkonfiguration-pi-hole][Umkonfiguration Pi-Hole]]
+  - [[#docker-compose-datei-anpassen][Docker Compose Datei anpassen]]
+  - [[#webserver-port-in-piholetoml-setzen][Webserver Port in pihole.toml setzen]]
+- [[#optional-dhcp-server-aktivieren][Optional DHCP Server aktivieren]]
+  - [[#konfiguration-dhcp-in-der-pihole-weboberfläche][Konfiguration DHCP in der Pihole Weboberfläche]]
+  - [[#dhcp-auf-eurem-router-deaktivieren][DHCP auf eurem Router deaktivieren]]
+    - [[#fritz-box][Fritz Box]]
+    - [[#unifi-controller][Unifi Controller]]
+  - [[#kontrolle-ob-dhcp-funktioniert][Kontrolle, ob DHCP funktioniert]]
+  - [[#dns-einträge-in-pihole][DNS Einträge in Pihole]]
+
+* Links aus dem Video
++ https://www.raspberrypi.com/software/
++ https://quad9.net/de/
++ https://github.com/pi-hole/docker-pi-hole/
++ https://searxng.org/
+
+* Videos
+https://www.youtube.com/watch?v=_DBCLYuQs7E&t=1578
+https://www.youtube.com/watch?v=DBCLYuQs7E
+
+* Installation Pi-Hole als Docker Container
+Als Benutzer ubuntu bitte folgendes ausführen
+#+begin_src bash
+  cd
+  mkdir docker docker/pi-hole
+  cd docker/pi-hole
+  mkdir etc-dnsmasq.d etc-pihole 
+
+  vi docker-compose.yaml
+#+end_src
+
+#+begin_src yaml
+# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+services:
+  pihole:
+    deploy:
+      replicas: 1
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      # DNS Ports
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Default HTTP Port
+      - "80:80/tcp"
+      # Default HTTPs Port. FTL will generate a self-signed certificate
+      - "443:443/tcp"
+      # Uncomment the below if using Pi-hole as your DHCP Server
+      #- "67:67/udp"
+    environment:
+      # Set the appropriate timezone for your location (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), e.g:
+      TZ: 'Europe/Berlin'
+      # Set a password to access the web interface. Not setting one will result in a random password being assigned
+      FTLCONF_webserver_api_password: 'correct horse battery staple'
+    # Volumes store your data between container upgrades
+    volumes:
+      # For persisting Pi-hole's databases and common configuration file
+      - './etc-pihole:/etc/pihole'
+      # Uncomment the below if you have custom dnsmasq config files that you want to persist. Not needed for most starting fresh with Pi-hole v6. If you're upgrading from v5 you and have used this directory before, you should keep it enabled for the first v6 container start to allow for a complete migration. It can be removed afterwards. Needs environment variable FTLCONF_misc_etc_dnsmasq_d: 'true'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    cap_add:
+      # See https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+      # Required if you are using Pi-hole as your DHCP server, else not needed
+      - NET_ADMIN
+      # Required if you are using Pi-hole as your NTP client to be able to set the host's system time
+      - SYS_TIME
+      # Optional, if Pi-hole should get some more processing time
+      - SYS_NICE
+    restart: unless-stopped
+#+end_src
+
+#+begin_src bash
+  docker compose pull
+  docker compose up
+
+  # Container mit STRG+c stoppen
+  # Dauerhaft dann starten im Hintergrund mit
+  docker compose up -d
+  # Zum Stoppen nehmt ihr dann
+  docker compose down
+#+end_src
+
+** Pi-Hole
+In Pi-Hole müssen wir noch etwas konfigurieren, damit wir auch DNS Abfragen stellen können
+
+Aufruf der Oberfläche von Pi-Hole geht über:
+http://192.168.1.51/admin/
+Sofern ihr keine andere IP Adresse verwendet.
+
+An der Konsole / Terminal sehen wir, dass im Moment folgender Befehl nicht funktioniert.
+#+begin_src bash
+nslookup www.youtube.com - 192.168.1.51
+#+end_src
+
+In der Weboberfläche müssen wir unter
++ Settings
+  + DNS
+    + Upstream DNS Server
+      + IPv4 Quad9 unfilterd in der ersten Spalte
+      + Cloudflare in der zweiten Spalte 
+    + Interface settings
+      + Permit all origins setzen
+    + Rate limiting
+      + 0 queries within 0 seconds setzen
+
+Und nun funktioniert das hier auch.        
+#+begin_src bash
+nslookup www.youtube.com - 192.168.1.51
+#+end_src
+
+** Fritzbox DNS ändern
++ Heimnetz
+  + Netzwerk
+    + Netzwerkeinstellungen
+      + IPv4-Einstellungen
+        Lokaler DNS Server: 192.168.1.51 (oder welche IP Addresse ihr hier eingestellt habt)
+
+* Links aus dem Video
+
+* Umkonfiguration Pi-Hole
+** Docker Compose Datei anpassen
+Datei docker-compose.yaml
+
+Wir ersetzen in der Datei den Part mit den Ports durch den network_mode
+#+begin_src diff
+<     ports:
+<       # DNS Ports
+<       - "53:53/tcp"
+<       - "53:53/udp"
+<       # Default HTTP Port
+<       - "7777:7777/tcp"
+<       # Uncomment the below if using Pi-hole as your DHCP Server
+<       - "67:67/udp"
+---
+>     network_mode: host
+#+end_src
+
+Danach sieht die Datei wie folgt aus:
+#+begin_src yaml
+services:
+  pihole:
+    deploy:
+      replicas: 1
+    container_name: pihole
+    image: pihole/pihole:latest
+    network_mode: host
+    environment:
+      # Set the appropriate timezone for your location (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), e.g:
+      TZ: 'Europe/Berlin'
+      # Set a password to access the web interface. Not setting one will result in a random password being assigned
+      FTLCONF_webserver_api_password: 'correct horse battery staple'
+    # Volumes store your data between container upgrades
+    volumes:
+      # For persisting Pi-hole's databases and common configuration file
+      - './etc-pihole:/etc/pihole'
+      # Uncomment the below if you have custom dnsmasq config files that you want to persist. Not needed for most starting fresh with Pi-hole v6. If you're upgrading from v5 you and have used this directory before, you should keep it enabled for the first v6 container start to allow for a complete migration. It can be removed afterwards. Needs environment variable FTLCONF_misc_etc_dnsmasq_d: 'true'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+      - './var-log-pihole:/var/log/pihole'
+    cap_add:
+      # See https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+      # Required if you are using Pi-hole as your DHCP server, else not needed
+      - NET_ADMIN
+      # Required if you are using Pi-hole as your NTP client to be able to set the host's system time
+      - SYS_TIME
+      # Optional, if Pi-hole should get some more processing time
+      - SYS_NICE
+    restart: unless-stopped
+#+end_src
+
+** Webserver Port in pihole.toml setzen
+Im Anschluss ändern wir in der Datei etc-pihole/pihole.toml die Portnummer des integrierten Webservers.
+
+Im VI könnt ihr mit dem Symbol "/" eine Suche nach einem Begriff starten.
+
+#+begin_src ini
+[webserver]
+  ...
+  port = "7777o,[::]:7777o"
+#+end_src
+
+Damit konfigurieren wir den eingebauten Webserver im Pi-Hole, damit er auf dem Port 7777 lauscht. Dieser Port wird dann durch das weiter oben gesetzte "network_mode: host" dann verwendet.
+
+
+* Optional DHCP Server aktivieren 
+** Konfiguration DHCP in der Pihole Weboberfläche
+Im Interface von Pihole stellen wir ein:
+
++ Settings
+  + DHCP
+    - DHCP server enabled aktivieren
+    - Start und End IP Adresses kontrollieren
+    - Gateway und Netmask kontrollieren
+
+Anschliessend dann den Pihole Container neu starten
+
+#+begin_src bash
+  docker compose down
+
+  docker compose up -d
+#+end_src
+
+Ob alles geklappt hat kann man sich in den Logs ansehen:
+
+#+begin_src bash
+  docker compose logs -f
+  # Mit STRG+C die Ausgabe beenden
+#+end_src
+
+Wichtig ... euer Pihole Container lauscht nun aktuell auf dem Port 7777. Bitte beim Aufrufen der Pi-Hole Administrationsoberfläche daran denken.
+http://192.168.1.51:7777/
+
+** DHCP auf eurem Router deaktivieren
+*** Fritz Box
++ Heimnetz
+  + Netzwerk
+    + Netzwerkeinstellungen
+      + IPv4 Einstellungen
+        - DHCP-Server aktivieren (bitte den Hacken raus nehmen)
+
+*** Unifi Controller
++ Settings (Zahnrad links unten)
+  + Networks
+    + default
+      + DHCP
+        - DHCP Mode: None
+
+** Kontrolle, ob DHCP funktioniert          
+Nun kommt der spannenden Teil. In der Oberfläche von Pi-Hole beobachten wir nun die pihole.log Datei:
++ System
+  + Tools
+    + Tail log files
+      + pihole.log
+
+Wartet hier ab oder macht auf eurem Smartphone, Tablet mal WLAN aus und wieder an.
+
+Im Logfile sollte etwas mit DHCPREQUEST und DHCPACK stehen.
+
+Die verwendeten IP-Adressen, die per DHCP vergeben wurden, kann man auch ansehen in der Liste:
++ Settings
+  + DHCP
+    + Currently active DHCP leases
+
+** DNS Einträge in Pihole
+DNS Einträge könnt ihr nun zukünftig in Pi-Hole machen.
++ System
+  + Settings
+    + Local DNS Records
+
