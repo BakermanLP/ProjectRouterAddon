@@ -28,8 +28,8 @@
 + https://searxng.org/
 
 * Videos
-https://www.youtube.com/watch?v=_DBCLYuQs7E&t=1578
-https://www.youtube.com/watch?v=DBCLYuQs7E
++ https://www.youtube.com/watch?v=_DBCLYuQs7E&t=1578
++ https://www.youtube.com/watch?v=DBCLYuQs7E
 
 * Installation Pi-Hole als Docker Container
 Als Benutzer ubuntu bitte folgendes ausführen
@@ -128,9 +128,7 @@ nslookup www.youtube.com - 192.168.1.51
       + IPv4-Einstellungen
         Lokaler DNS Server: 192.168.1.51 (oder welche IP Addresse ihr hier eingestellt habt)
 
-* Links aus dem Video
-
-* Umkonfiguration Pi-Hole
+* Optional DHCP in Pi-Hole aktivieren
 ** Docker Compose Datei anpassen
 Datei docker-compose.yaml
 
