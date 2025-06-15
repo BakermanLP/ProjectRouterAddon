@@ -1,0 +1,17 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:alpine
+    container_name: uptime-kuma
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data:/app/data
+      - /var/run/docker.sock:/app/data/docker.sock
+    ports:
+      - 3001:3001
+    restart: always
+    network_mode: bridge
+    cpus: 0.5
+    mem_limit: 400M
+networks: {}
