@@ -1,0 +1,66 @@
+#+title: Project Router Addon - Uptime Kuma zur Netzwerküberwachung
+#+author: Michael Bäcker
+#+date: 2025-06-17
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Links 
+https://github.com/louislam/uptime-kuma
+
+* Video
+https://www.youtube.com/watch?v=1v5DOluaslk
+
+** Installation mittels Docker Compose File
+Erst mal schnell das docker-compose.yaml File anlegen in einem eigenen Ordner:
+
+#+begin_src yaml
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:alpine
+    container_name: uptime-kuma
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data:/app/data
+      - /var/run/docker.sock:/app/data/docker.sock
+    ports:
+      - 3001:3001
+    restart: always
+    network_mode: bridge
+    cpus: 0.5
+    mem_limit: 400M
+#+end_src
+
+#+begin_src bash
+  mkdir data
+
+  docker compose up -d
+  # oder
+  docker-compose up -d
+
+  # Kontrolle ob er richtig läuft
+  docker compose logs -f
+  # oder
+  docker-compose logs -f
+  # Mit STRG+c die Ausgabe beenden
+#+end_src
+
+Im NGinx Proxy Manager richten wir den Proxy Host ein:
++ Hosts
+  + Proxy Hosts
+    + Add Proxy Host
+
+       - Domain Names: uptime.home.baecker.com
+       - Scheme: http
+       - Forward Hostname / IP: 192.168.1.51
+       - Forward Port: 3001
+
+In Pihole richten wir einen DNS Namen oder einen CName ein:
++ Settings
+  + Local DNS Records
+
+    - Einen local CNAME Record für euren virtuellen Host
+    - Domain: uptime.home.baecker.com
+    - Target: routeraddon.home.baecker.com
+
+Und jetzt solltet ihr mittels http://uptime.home.baecker.com/ auf die Startseite von Uptime kommen

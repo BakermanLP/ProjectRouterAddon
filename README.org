@@ -135,3 +135,5 @@ docker ps
 + Installation Pi-Hole [[docker/pi-hole/README.org][Anleitung]]
 + Installation NGinx Proxy Manager [[docker/nginx-proxy-manager/README.org][Anleitung]]
 + Installation SearXNG [[docker/searxng/README.org][Anleitung]]
++ Installation Dockge [[docker/dockge/README.org][Anleitung]]
++ Installation Uptime Kuna [[docker/uptime-kuma/README.org][Anleitung]]

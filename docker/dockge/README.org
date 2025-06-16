@@ -1,0 +1,75 @@
+#+title: Project Router Addon - Dockge als Docker Verwaltung
+#+author: Michael Bäcker
+#+date: 2025-06-16
+#+description: Wie bringen wir einen Mehrwert in unser Heimnetzwerk
+
+* Links 
++ https://github.com/louislam/dockge
+
+* Video
+https://www.youtube.com/watch?v=1v5DOluaslk
+
+** Installation mittels Docker Compose File
+Erst mal schnell das docker-compose.yaml File anlegen in einem eigenen Ordner:
+
+#+begin_src yaml
+services:
+  dockge:
+    image: louislam/dockge:1
+    restart: unless-stopped
+    user: 1000:1000
+    group_add:
+      - '111'
+    ports:
+      # Host Port : Container Port
+      - 5001:5001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+
+      # If you want to use private registries, you need to share the auth file with Dockge:
+      # - /root/.docker/:/root/.docker
+
+      # Stacks Directory
+      # ⚠️ READ IT CAREFULLY. If you did it wrong, your data could end up writing into a WRONG PATH.
+      # ⚠️ 1. FULL path only. No relative path (MUST)
+      # ⚠️ 2. Left Stacks Path === Right Stacks Path (MUST)
+      - /home/ubuntu/docker:/home/ubuntu/docker
+    environment:
+      # Tell Dockge where is your stacks directory
+      - DOCKGE_STACKS_DIR=/home/ubuntu/docker
+#+end_src
+
+#+begin_src bash
+  mkdir data
+
+  docker compose up -d
+  # oder
+  docker-compose up -d
+
+  # Kontrolle ob er richtig läuft
+  docker compose logs -f
+  # oder
+  docker-compose logs -f
+  # Mit STRG+c die Ausgabe beenden
+#+end_src
+
+Im NGinx Proxy Manager richten wir den Proxy Host ein:
++ Hosts
+  + Proxy Hosts
+    + Add Proxy Host
+
+       - Domain Names: dockge.home.baecker.com
+       - Scheme: http
+       - Forward Hostname / IP: 192.168.1.51
+       - Forward Port: 5001
+
+In Pihole richten wir einen DNS Namen oder einen CName ein:
++ Settings
+  + Local DNS Records
+
+    - Einen local CNAME Record für euren virtuellen Host
+    - Domain: dockge.home.baecker.com
+    - Target: routeraddon.home.baecker.com
+
+Und jetzt solltet ihr mittels http://dockge.home.baecker.com/ auf die Startseite von Dockge kommen
